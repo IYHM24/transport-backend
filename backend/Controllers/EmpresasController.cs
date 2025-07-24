@@ -7,8 +7,9 @@ using Model;
 
 namespace backend_transport.Controllers
 {
-    [Authorize]
+    //[Authorize]
     [ApiController]
+    [Authorize(Roles = "Owner")]
     [Route("api/[controller]")]
     public class EmpresasController : ControllerBase
     {
