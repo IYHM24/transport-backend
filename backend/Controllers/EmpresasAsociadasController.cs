@@ -62,7 +62,7 @@ namespace backend_transport.Controllers
 
         // Actualizar empresa asociada
         [HttpPut("{codEmpresaAsociada}")]
-        public async Task<IActionResult> ActualizarEmpresaAsociada(string codEmpresaAsociada, [FromBody] EmpresasAsociadas empresaActualizada)
+        public async Task<IActionResult> ActualizarEmpresaAsociada(string codEmpresaAsociada, EmpresasAsociadas empresaActualizada)
         {
             if (codEmpresaAsociada != empresaActualizada.codEmpresaAsociada)
                 return BadRequest("El código de empresa asociada no coincide.");

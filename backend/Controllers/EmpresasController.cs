@@ -3,6 +3,7 @@ using Entities;
 using Microsoft.AspNetCore.Mvc;
 using backend_transport.Context;
 using Microsoft.EntityFrameworkCore;
+using Model;
 
 namespace backend_transport.Controllers
 {
@@ -20,15 +21,28 @@ namespace backend_transport.Controllers
 
         // Crear empresa
         [HttpPost]
-        public async Task<IActionResult> CrearEmpresa(Empresas empresa)
+        public IActionResult CrearEmpresa(CrearEmpresaModel dto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            _context.Empresas.Add(empresa);
-            await _context.SaveChangesAsync();
+            Empresas empresa = new Empresas
+            {
+                NIT = dto.NIT,
+                colorPrimario = dto.colorPrimario,
+                colorSecundario = dto.colorSecundario,
+                foto_del_logo = dto.foto_del_logo,
+                celular = dto.celular,
+                correo = dto.correo,
+                FechaInicioMembresia = dto.FechaInicioMembresia,
+                FechaFinMembresia = dto.FechaFinMembresia
+                // codEmpresa se genera automáticamente
+            };
 
-            return CreatedAtAction(nameof(ObtenerEmpresaPorId), new { codEmpresa = empresa.codEmpresa }, empresa);
+            _context.Empresas.Add(empresa);
+            _context.SaveChanges();
+
+            return CreatedAtAction(nameof(CrearEmpresa), new { id = empresa.codEmpresa }, empresa);
         }
 
         // Obtener todas las empresas
@@ -52,23 +66,35 @@ namespace backend_transport.Controllers
 
         // Actualizar empresa
         [HttpPut("{codEmpresa}")]
-        public async Task<IActionResult> ActualizarEmpresa(string codEmpresa, Empresas empresaActualizada)
+        public async Task<IActionResult> ActualizarEmpresa(string codEmpresa, ActualizarEmpresaModel dto)
         {
-            if (codEmpresa != empresaActualizada.codEmpresa)
-                return BadRequest("El código de empresa no coincide.");
-
             var empresa = await _context.Empresas.FindAsync(codEmpresa);
             if (empresa == null)
                 return NotFound();
 
-            // Actualiza los campos
-            empresa.NIT = empresaActualizada.NIT;
-            empresa.colorPrimario = empresaActualizada.colorPrimario;
-            empresa.colorSecundario = empresaActualizada.colorSecundario;
-            empresa.foto_del_logo = empresaActualizada.foto_del_logo;
-            empresa.celular = empresaActualizada.celular;
-            empresa.correo = empresaActualizada.correo;
-            // No actualices codEmpresa ni FechaCreacionUnix
+            if (dto.NIT != null)
+                empresa.NIT = dto.NIT;
+
+            if (dto.colorPrimario != null)
+                empresa.colorPrimario = dto.colorPrimario;
+
+            if (dto.colorSecundario != null)
+                empresa.colorSecundario = dto.colorSecundario;
+
+            if (dto.foto_del_logo != null)
+                empresa.foto_del_logo = dto.foto_del_logo;
+
+            if (dto.celular != null)
+                empresa.celular = dto.celular;
+
+            if (dto.correo != null)
+                empresa.correo = dto.correo;
+
+            if (dto.FechaInicioMembresia.HasValue)
+                empresa.FechaInicioMembresia = dto.FechaInicioMembresia.Value;
+
+            if (dto.FechaFinMembresia.HasValue)
+                empresa.FechaFinMembresia = dto.FechaFinMembresia.Value;
 
             await _context.SaveChangesAsync();
             return Ok(empresa);

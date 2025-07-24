@@ -6,8 +6,8 @@ using Model;
 
 namespace backend_transport.Controllers
 {
-    [ApiController]
     [Authorize]
+    [ApiController]
     [Route("api/[controller]")]
     public class RoleConrtoller: ControllerBase
     {
@@ -52,7 +52,9 @@ namespace backend_transport.Controllers
         [HttpGet("list")]
         public IActionResult ListRoles()
         {
-            var roles = _roleManager.Roles.Select(r => r.Name).ToList();
+            var roles = _roleManager.Roles
+                .Select(r => new { Id = r.Id, Name = r.Name })
+                .ToList();
             return Ok(roles);
         }
     }

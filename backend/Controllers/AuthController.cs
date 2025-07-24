@@ -14,15 +14,17 @@ namespace backend_transport.Controllers
     public class AuthController : ControllerBase
     {
         private readonly UserManager<UserIdentity> _userManager;
+        private readonly RoleManager<RolIdentity> _roleManager;
         private readonly IConfiguration _configuration;
 
-        public AuthController
-        (
+        public AuthController(
             UserManager<UserIdentity> userManager,
+            RoleManager<RolIdentity> roleManager,
             IConfiguration configuration
         )
         {
             _userManager = userManager;
+            _roleManager = roleManager;
             _configuration = configuration;
         }
 
@@ -67,7 +69,7 @@ namespace backend_transport.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register( RegisterModel model)
+        public async Task<IActionResult> Register(RegisterModel model)
         {
             // Verificar si el usuario ya existe
             var userExists = await _userManager.FindByNameAsync(model.Username);
@@ -76,13 +78,19 @@ namespace backend_transport.Controllers
                 return BadRequest("El usuario ya existe.");
             }
 
+            // Verificar que el rol existe
+            var role = await _roleManager.FindByIdAsync(model.RolId);
+            if (role == null)
+            {
+                return BadRequest("El rol especificado no existe.");
+            }
+
             // Crear un nuevo usuario
             UserIdentity user = new UserIdentity
             {
                 UserName = model.Username,
                 Email = model.Email,
                 CodEmpresa = model.CodEmpresa,
-                RoleId = model.RolId, // Asignar el rol al usuario
                 SecurityStamp = Guid.NewGuid().ToString()
             };
 
@@ -92,7 +100,14 @@ namespace backend_transport.Controllers
                 return BadRequest($"Error al crear el usuario: {string.Join(", ", result.Errors.Select(e => e.Description))}");
             }
 
-            return Ok("Usuario creado exitosamente.");
+            // Asociar el usuario al rol usando el nombre del rol
+            var addToRoleResult = await _userManager.AddToRoleAsync(user, role.Name!);
+            if (!addToRoleResult.Succeeded)
+            {
+                return BadRequest($"Usuario creado, pero error al asociar el rol: {string.Join(", ", addToRoleResult.Errors.Select(e => e.Description))}");
+            }
+
+            return Ok("Usuario creado y rol asociado exitosamente.");
         }
     }
 }
